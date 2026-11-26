@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Para ti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0e0d10; --ink:#e9e4da; --muted:#8a8478; --accent:#b08a6e; --wine:#5a2a3a; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; }
+  body {
+    background: radial-gradient(ellipse at 50% 25%, #1c1a20 0%, var(--bg) 70%);
+    color:var(--ink);
+    font-family:"Cormorant Garamond", Georgia, "Times New Roman", serif;
+    font-weight:300; -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  #stars { position:fixed; inset:0; pointer-events:none; z-index:0; }
+  .star { position:absolute; border-radius:50%; background:var(--ink); opacity:0; animation:tw 5s ease-in-out infinite; }
+  @keyframes tw { 0%,100% { opacity:.05; } 50% { opacity:.6; } }
+  .glow { position:fixed; left:50%; top:30%; width:520px; height:520px; transform:translate(-50%,-50%);
+    background:radial-gradient(circle, rgba(176,138,110,.13), transparent 65%); pointer-events:none; z-index:0; animation:breathe 8s ease-in-out infinite; }
+  @keyframes breathe { 0%,100% { opacity:.6; transform:translate(-50%,-50%) scale(1);} 50% { opacity:1; transform:translate(-50%,-50%) scale(1.12);} }
+
+  .screen { position:relative; z-index:1; min-height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2.5rem 1.5rem; text-align:center; transition:opacity 1.2s ease; }
+  .hidden { display:none; }
+  .fade-out { opacity:0; }
+
+  /* marco fino */
+  .frame { position:fixed; inset:16px; border:1px solid rgba(176,138,110,.28); pointer-events:none; z-index:1; }
+  .frame::before, .frame::after { content:"✦"; position:absolute; color:var(--accent); font-size:.8rem; background:var(--bg); padding:0 .6rem; left:50%; transform:translateX(-50%); }
+  .frame::before { top:-.6em; } .frame::after { bottom:-.6em; }
+
+  .eyebrow { color:var(--accent); font-size:.85rem; letter-spacing:.5em; text-transform:uppercase; margin-bottom:2rem; }
+  .mark { width:1px; height:56px; background:linear-gradient(var(--accent), transparent); margin-bottom:2rem; }
+  .gate h1 { font-weight:300; font-style:italic; font-size:clamp(1.9rem,6vw,2.8rem); letter-spacing:.04em; }
+  .gate .sub { color:var(--muted); margin-top:1rem; font-size:1.1rem; letter-spacing:.08em; }
+  .orn { color:var(--accent); letter-spacing:1em; font-size:.8rem; margin:1.8rem 0 0; opacity:.8; }
+  .gate #form { margin-top:2rem; display:flex; flex-direction:column; align-items:center; gap:1.2rem; }
+  .gate input { background:transparent; border:none; border-bottom:1px solid var(--muted); color:var(--ink); text-align:center; font:inherit; font-size:1.6rem; letter-spacing:.5em; padding:.5rem .2rem .5rem .7rem; width:min(260px,70vw); outline:none; transition:border-color .4s; }
+  .gate input:focus { border-color:var(--accent); }
+  .gate button { background:none; border:1px solid var(--accent); color:var(--accent); font:inherit; font-size:1rem; letter-spacing:.3em; text-transform:uppercase; padding:.7rem 1.8rem; cursor:pointer; transition:background .4s,color .4s; }
+  .gate button:hover { background:var(--accent); color:var(--bg); }
+  .error { height:1.2rem; color:var(--accent); font-style:italic; opacity:0; transition:opacity .5s; }
+  .error.show { opacity:1; }
+  .shake { animation:shake .4s; }
+  @keyframes shake { 20%,60% { transform:translateX(-6px);} 40%,80% { transform:translateX(6px);} }
+  .hint { margin-top:2.2rem; color:var(--muted); font-style:italic; font-size:1rem; letter-spacing:.08em; }
+
+  /* carta */
+  .letter { opacity:0; justify-content:flex-start; padding-top:12vh; padding-bottom:12vh; }
+  .letter.show { opacity:1; }
+  .paper { position:relative; max-width:36rem; width:100%; padding:3.2rem 2.2rem; border:1px solid rgba(176,138,110,.3); background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); box-shadow:0 0 80px rgba(176,138,110,.08); }
+  .paper::before, .paper::after { content:""; position:absolute; width:22px; height:22px; border:1px solid var(--accent); }
+  .paper::before { top:-6px; left:-6px; border-right:none; border-bottom:none; }
+  .paper::after { bottom:-6px; right:-6px; border-left:none; border-top:none; }
+  .paper .eyebrow { margin-bottom:1.2rem; }
+  .paper .date { color:var(--muted); font-style:italic; font-size:1rem; margin-bottom:2.2rem; }
+  .to { font-style:italic; color:var(--accent); font-size:1.7rem; letter-spacing:.05em; margin-bottom:2.2rem; text-align:left; }
+  .paper p { text-align:left; font-size:clamp(1.2rem,3.6vw,1.42rem); line-height:1.9; margin-bottom:1.8rem; opacity:0; transform:translateY(8px); transition:opacity 1.4s ease, transform 1.4s ease; }
+  .paper p.in { opacity:1; transform:none; }
+  .paper p.first::first-letter { float:left; font-size:3.6rem; line-height:.9; padding:.25rem .6rem 0 0; color:var(--accent); font-weight:400; }
+  .divider { color:var(--accent); letter-spacing:1em; font-size:.8rem; margin:1.6rem 0; opacity:0; transition:opacity 1.4s; }
+  .divider.in { opacity:.8; }
+  .quote { font-style:italic; color:var(--ink); font-size:1.35rem; line-height:1.7; padding:0 1rem; opacity:0; transition:opacity 1.6s; }
+  .quote.in { opacity:1; }
+  .sign { text-align:right; font-style:italic; color:var(--accent); font-size:1.5rem; margin-top:2.4rem; opacity:0; transition:opacity 1.6s; }
+  .sign.in { opacity:1; }
+  .end { margin-top:2.5rem; color:var(--muted); font-size:.8rem; letter-spacing:.5em; text-transform:uppercase; opacity:0; transition:opacity 2s; }
+  .end.in { opacity:.8; }
+
+  .float { position:fixed; bottom:-10px; width:3px; height:3px; border-radius:50%; background:var(--accent); opacity:0; z-index:0; animation:rise linear forwards; }
+  @keyframes rise { 0% { opacity:0; transform:translateY(0);} 15% { opacity:.55;} 100% { opacity:0; transform:translateY(-105vh);} }
+
+  /* ===== papel antiguo y quemado ===== */
+  .stage { position:relative; max-width:36rem; width:100%; }
+  .wrap { position:relative; z-index:1; animation:sway 10s ease-in-out infinite, ember 3.2s ease-in-out infinite; transform-origin:50% 0; }
+  @keyframes sway { 0%,100% { transform:rotate(-.35deg);} 50% { transform:rotate(.35deg);} }
+  @keyframes ember { 0%,100% { filter:drop-shadow(0 0 6px rgba(255,110,30,.35)) drop-shadow(0 0 22px rgba(255,70,0,.18)); }
+                     50% { filter:drop-shadow(0 0 12px rgba(255,150,50,.65)) drop-shadow(0 0 34px rgba(255,90,0,.3)); } }
+  .paper { max-width:none; border:none; box-shadow:none; padding:4rem 2.6rem;
+    clip-path:polygon(0.0% 0.4%, 7.1% 0.2%, 14.3% 0.7%, 21.4% 0.1%, 28.6% 0.6%, 35.7% 0.4%, 42.9% 0.1%, 50.0% 0.6%, 57.1% 0.0%, 64.3% 0.5%, 71.4% 0.1%, 78.6% 0.1%, 85.7% 0.5%, 92.9% 0.9%, 100.0% 0.1%, 99.6% 3.8%, 99.0% 7.7%, 98.5% 11.5%, 99.1% 15.4%, 99.4% 19.2%, 98.4% 23.1%, 99.9% 26.9%, 98.6% 30.8%, 99.5% 34.6%, 99.8% 38.5%, 99.8% 42.3%, 99.5% 46.2%, 98.7% 50.0%, 99.7% 53.8%, 99.1% 57.7%, 99.0% 61.5%, 99.4% 65.4%, 99.1% 69.2%, 99.9% 73.1%, 99.9% 76.9%, 99.7% 80.8%, 98.9% 84.6%, 99.3% 88.5%, 99.5% 92.3%, 99.1% 96.2%, 100.0% 99.5%, 92.9% 99.7%, 85.7% 99.1%, 78.6% 99.2%, 71.4% 99.7%, 64.3% 99.4%, 57.1% 99.4%, 50.0% 99.0%, 42.9% 99.2%, 35.7% 99.7%, 28.6% 98.9%, 21.4% 99.9%, 14.3% 99.5%, 7.1% 99.2%, 0.0% 99.8%, 0.8% 96.2%, 0.1% 92.3%, 1.1% 88.5%, 1.2% 84.6%, 0.9% 80.8%, 1.4% 76.9%, 0.5% 73.1%, 1.1% 69.2%, 1.0% 65.4%, 0.9% 61.5%, 0.7% 57.7%, 1.3% 53.8%, 1.5% 50.0%, 0.8% 46.2%, 1.1% 42.3%, 0.1% 38.5%, 1.1% 34.6%, 1.0% 30.8%, 1.6% 26.9%, 1.3% 23.1%, 0.5% 19.2%, 0.6% 15.4%, 1.1% 11.5%, 0.0% 7.7%, 0.7% 3.8%);
+    background:
+      radial-gradient(circle at 0% 0%, rgba(25,8,0,.95) 0, rgba(25,8,0,0) 22%),
+      radial-gradient(circle at 100% 0%, rgba(25,8,0,.9) 0, rgba(25,8,0,0) 18%),
+      radial-gradient(circle at 100% 100%, rgba(25,8,0,.95) 0, rgba(25,8,0,0) 24%),
+      radial-gradient(circle at 0% 100%, rgba(25,8,0,.9) 0, rgba(25,8,0,0) 20%),
+      radial-gradient(ellipse at 70% 40%, rgba(120,70,20,.22) 0, transparent 40%),
+      radial-gradient(ellipse at 20% 65%, rgba(110,60,20,.2) 0, transparent 35%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35 0 0 0 0 .22 0 0 0 0 .1 0 0 0 .4 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+      linear-gradient(160deg, #e3d2a8 0%, #d4bd8a 45%, #c4a56e 100%);
+    box-shadow: inset 0 0 70px 14px rgba(40,14,0,.75), inset 0 0 16px 3px rgba(0,0,0,.85);
+  }
+  .paper::before, .paper::after { content:none; }
+  .paper .eyebrow { color:#7a3b2a; }
+  .paper .date { color:#6b5640; }
+  .paper .to { color:#6e2a34; font-weight:500; }
+  .paper p { color:#33261a; font-weight:500; }
+  .paper p.first::first-letter { color:#6e2a34; }
+  .paper .divider { color:#7a3b2a; }
+  .paper .quote { color:#3a2a1d; font-weight:500; }
+  .paper .sign { color:#6e2a34; font-weight:500; }
+  .paper .end { color:#6b5640; }
+
+  /* rosa */
+  .rose { position:absolute; z-index:0; width:min(250px,60vw); right:-55px; top:-105px; opacity:0; transform:scale(.55) rotate(-25deg); transition:opacity 3s ease 1s, transform 4s cubic-bezier(.2,.8,.2,1) 1s; pointer-events:none; }
+  .letter.show .rose { opacity:.95; transform:none; }
+  .rose svg { width:100%; height:auto; display:block; animation:rsway 8s ease-in-out infinite; transform-origin:50% 22%; filter:drop-shadow(0 6px 16px rgba(0,0,0,.6)); }
+  @keyframes rsway { 0%,100% { transform:rotate(-3deg);} 50% { transform:rotate(3deg);} }
+
+  /* brasas y pétalos */
+  .float { background:#ff8a3d; box-shadow:0 0 6px 1px rgba(255,120,40,.8); }
+  .petal { position:fixed; top:-20px; width:12px; height:14px; border-radius:60% 0 60% 60%; background:linear-gradient(135deg,#a02d4b,#5a1527); opacity:0; z-index:0; animation:fall linear forwards; }
+  @keyframes fall { 0% { opacity:0; transform:translate(0,0) rotate(0);} 10% { opacity:.8;} 100% { opacity:0; transform:translate(var(--dx),108vh) rotate(var(--rot)); } }
+
+  /* ===== ajustes: título legible, texto justificado, dos páginas ===== */
+  .letter { padding-top:9vh; padding-bottom:9vh; }
+  .paper { padding:3rem 2.6rem; }
+  .paper .eyebrow { color:#4a1f26; font-weight:600; font-size:1.05rem; letter-spacing:.22em; line-height:1.7; margin-bottom:1.4rem; }
+  .paper .eyebrow::after { content:""; display:block; width:64px; height:1px; background:#7a3b2a; margin:1rem auto 0; }
+  .paper .to { color:#5a1f2b; font-weight:600; font-size:1.55rem; margin-bottom:1.6rem; }
+  .paper p { text-align:justify; text-justify:inter-word; hyphens:auto; -webkit-hyphens:auto; font-size:clamp(1.12rem,3.2vw,1.3rem); line-height:1.75; margin-bottom:1.25rem; }
+  .paper p.first::first-letter { font-size:3.3rem; }
+  .page { transition:opacity .9s ease; }
+  .page.out { opacity:0; }
+  .continue { text-align:center; margin-top:2rem; opacity:0; transition:opacity 1.4s ease; }
+  .continue.in { opacity:1; }
+  .continue button { background:none; border:1px solid #5a1f2b; color:#5a1f2b; font:inherit; font-weight:600; font-size:.95rem; letter-spacing:.28em; text-transform:uppercase; padding:.75rem 1.6rem; cursor:pointer; transition:background .4s,color .4s; }
+  .continue button:hover { background:#5a1f2b; color:#e3d2a8; }
+
+  .paper .quote { text-align:center; font-style:italic; font-weight:500; font-size:clamp(1.25rem,3.8vw,1.5rem); line-height:1.6; color:#4a1f26; margin:1.4rem 0 0; padding:0 .6rem; }
+  .paper .sign { margin-top:1.8rem; }
+  .paper .sign.center { text-align:center; font-size:1.6rem; margin-top:1rem; }
+  .paper .end { text-align:center; }
+  .continue.more { margin-top:1.6rem; }
+  .continue.more button { border-color:#7a3b2a; color:#7a3b2a; font-size:.85rem; letter-spacing:.3em; padding:.55rem 1.3rem; }
+  .title3 { text-align:center; font-style:italic; font-weight:600; font-size:clamp(1.5rem,5vw,1.85rem); color:#5a1f2b; margin-bottom:1.8rem; line-height:1.4; }
+  .title3::after { content:""; display:block; width:64px; height:1px; background:#7a3b2a; margin:1rem auto 0; }
+
+  .paper p.center { text-align:center; font-size:clamp(1.2rem,3.6vw,1.4rem); line-height:1.7; margin:1rem 0 1.8rem; }
+  .paper input.pw { background:transparent; border:none; border-bottom:1px solid #5a1f2b; color:#33261a; text-align:center; font:inherit; font-weight:600; font-size:1.6rem; letter-spacing:.5em; padding:.4rem .2rem .4rem .6rem; width:180px; outline:none; }
+  .err2 { height:1.3rem; margin:.5rem 0; color:#7a3b2a; font-style:italic; font-weight:500; opacity:0; transition:opacity .5s; }
+  .err2.show { opacity:1; }
+  .answers { display:flex; flex-direction:column; align-items:center; gap:.9rem; }
+  .answers .ans { letter-spacing:.18em; font-size:.9rem; }
+  .note { margin-top:1rem; color:#6b5640; font-style:italic; font-size:1rem; min-height:1.2rem; }
+
+  .ownbox { margin-top:1.4rem; display:flex; flex-direction:column; align-items:center; gap:1rem; }
+  .ownbox.hidden { display:none; }
+  .ownbox textarea { width:100%; background:rgba(255,255,255,.18); border:1px solid #5a1f2b; color:#33261a; font:inherit; font-weight:500; font-size:1.15rem; line-height:1.6; padding:.8rem 1rem; resize:vertical; outline:none; }
+  .ownbox textarea::placeholder { color:#7a6a55; font-style:italic; }
+
+  .music { position:fixed; right:22px; bottom:22px; z-index:5; width:46px; height:46px; border-radius:50%; background:rgba(14,13,16,.7); border:1px solid var(--accent); color:var(--accent); font-size:1.3rem; cursor:pointer; transition:opacity .4s, background .4s; }
+  .music:hover { background:var(--accent); color:var(--bg); }
+  .music.off { opacity:.45; }
+</style>
+</head>
+<body>
+<div id="stars"></div>
+<div class="glow"></div>
+<div class="frame"></div>
+
+<main class="screen gate" id="gate">
+  <div class="eyebrow">Una carta</div>
+  <div class="mark"></div>
+  <h1>Hay algo para ti</h1>
+  <p class="sub">Solo tú sabes cómo abrirlo</p>
+  <div class="orn">✦ ✦ ✦</div>
+  <div id="form">
+    <input id="pass" type="password" aria-label="Contraseña" maxlength="12" autofocus>
+    <div class="error" id="err">Esa no es.</div>
+    <button type="button" id="go">Abrir</button>
+  </div>
+  <p class="hint">Tres letras</p>
+</main>
+
+<article class="screen letter hidden" id="letter">
+  <div class="stage"><div class="rose" id="rose"></div><div class="wrap"><div class="paper">
+    <div class="page" id="page1">
+      <div class="eyebrow">Algo que quería compartir contigo</div>
+      <div class="to">Para Tatiana. ♡</div>
+      <p class="first">La verdad, quería tener un detalle contigo y pensé que esta sería una bonita manera de hacerlo.</p>
+      <p>Me gusta compartir contigo, hablar, conocerte un poquito más y descubrir esas pequeñas cosas que quizás todavía no sé de ti.</p>
+      <p>No sé qué pueda pasar más adelante, y tampoco quiero adelantarme a las cosas. Simplemente me gustaría que siguiéramos conociéndonos, compartiendo momentos y dejando que todo se dé de manera natural.</p>
+      <div class="continue"><button type="button" id="next">Continuar la carta</button></div>
+    </div>
+    <div class="page hidden" id="page2">
+      <div class="divider">✦ ✦ ✦</div>
+      <p>Me gustaría que entre nosotros hubiera confianza, sinceridad y tranquilidad. Que podamos hablar de cualquier cosa, reírnos por tonterías y compartir esos pequeños momentos que, sin darnos cuenta, pueden llegar a ser especiales.</p>
+      <p>No hice esto esperando algo a cambio. Simplemente quería regalarte algo diferente, algo que fuera para ti y que pudieras conservar como un pequeño recuerdo.</p>
+      <p>Espero que te guste tanto como a mí me gustó la idea de crearlo. Y bueno, Tatiana, no sé qué nos espere más adelante, pero me gustaría que nos diéramos la oportunidad de descubrirlo.</p>
+      <div class="divider">✦ ✦ ✦</div>
+      <div class="quote">No sé si el destino nos tenga preparado algo, pero entre tantas personas, qué bonito sería que nos eligiéramos mutuamente.</div>
+      <div class="sign">Con mucho cariño. ♡</div>
+      <div class="end">✦ fin ✦</div>
+      <div class="continue more"><button type="button" id="next2">Por cierto…</button></div>
+    </div>
+    <div class="page hidden" id="page3">
+      <div class="title3">Por cierto, quería contarte algo...</div>
+      <p>Al principio pensé en hacerte una carta escrita a mano, pero la verdad es que mi letra no es la mejor jajaja. Así que se me ocurrió hacer algo diferente.</p>
+      <p>Quizás no sea una carta de esas que puedes guardar entre las páginas de un libro, pero es una pequeña creación hecha por mí, utilizando algo que conozco y que disfruto hacer.</p>
+      <p>Le dediqué tiempo y mucho cariño, porque quería regalarte algo distinto y, sobre todo, algo que fuera especialmente para ti.</p>
+      <div class="divider">✦ ✦ ✦</div>
+      <div class="sign center">Espero que te haya gustado. ♡</div>
+      <div class="continue more"><button type="button" id="next3">Continuar</button></div>
+    </div>
+    <div class="page hidden" id="page4">
+      <div class="title3">Una última cosa…</div>
+      <p class="center">Si estás lista para ver esto, pregúntale la contraseña a la persona que te envió esto.</p>
+      <div class="continue">
+        <input class="pw" id="pass2" type="password" maxlength="8" aria-label="Contraseña">
+        <div class="err2" id="err2">Esa no es.</div>
+        <button type="button" id="go2">Abrir</button>
+      </div>
+      <div class="continue more"><button type="button" id="reread">Quiero volver a leer la carta</button></div>
+    </div>
+    <div class="page hidden" id="page5">
+      <div class="title3">Tatiana…</div>
+      <p>Hay algo que quiero preguntarte y quiero hacerlo con toda la sinceridad.</p>
+      <p>Me gustaría intentar algo contigo. No quiero quedarme solamente con la duda de qué podría pasar entre nosotros. Me gustaría que pudiéramos dar ese paso y descubrir si podemos construir algo bonito juntos.</p>
+      <p>Por eso, quiero preguntártelo directamente, sin rodeos y sin presionarte:</p>
+      <div class="quote">¿Quieres intentar algo conmigo?</div>
+      <p>Me gustaría mucho que tu respuesta fuera un sí, pero también voy a respetar lo que realmente sientas y decidas.</p>
+      <p>Solo quería tener el valor de preguntártelo de una manera diferente y especial.</p>
+      <div class="sign">Con cariño. ♡</div>
+      <div class="continue">
+        <div class="answers">
+          <button type="button" class="ans" data-msg="Hola Felipe, ya leí la carta y tu pregunta. Me gustaría intentarlo ♡">Me gustaría intentarlo ♡</button>
+          <button type="button" class="ans" data-msg="Hola Felipe, ya leí la carta y tu pregunta. No quiero intentarlo, pero hablemos más.">No quiero intentarlo, pero hablemos más</button>
+          <button type="button" class="ans" id="own">Quiero escribir mi propia respuesta</button>
+        </div>
+        <div class="ownbox hidden" id="ownbox">
+          <textarea id="owntext" rows="4" placeholder="Escribe aquí lo que quieras decirle…"></textarea>
+          <button type="button" class="ans" id="ownsend">Enviar por WhatsApp</button>
+        </div>
+        <div class="note" id="note"></div>
+      </div>
+      <div class="continue more"><button type="button" id="reread2">Volver a leer la carta</button></div>
+    </div>
+  </div></div></div>
+</article>
+
+<audio id="song" src="cancion.mp3" loop preload="auto"></audio>
+<button type="button" id="mbtn" class="music hidden" aria-label="Música">♪</button>
+
+<script>
+  // Contraseña: TQM (se guarda solo el hash; no distingue mayúsculas)
+  // Contraseña: TQM (se guarda solo una huella; no distingue mayúsculas)
+  function huella(str){ let h1=0xdeadbeef, h2=0x41c6ce57; for(let i=0;i<str.length;i++){ const c=str.charCodeAt(i); h1=Math.imul(h1^c,2654435761); h2=Math.imul(h2^c,1597334677);} h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909); h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909); return (4294967296*(2097151&h2)+(h1>>>0)).toString(16); }
+  const HASH = "8ba2c04526384";
+
+  // estrellas
+  const sky = document.getElementById("stars");
+  for (let i=0;i<70;i++){ const s=document.createElement("div"); s.className="star";
+    const z=Math.random()*2+1; s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;width:${z}px;height:${z}px;animation-delay:${Math.random()*5}s;animation-duration:${3+Math.random()*5}s`;
+    sky.appendChild(s); }
+
+  const form=document.getElementById("form"), pass=document.getElementById("pass"), err=document.getElementById("err");
+  const gate=document.getElementById("gate"), letter=document.getElementById("letter");
+
+  function floaters(){ setInterval(()=>{ const f=document.createElement("div"); f.className="float";
+    f.style.left=Math.random()*100+"%"; f.style.animationDuration=(9+Math.random()*8)+"s";
+    document.body.appendChild(f); setTimeout(()=>f.remove(),18000); }, 900); }
+
+
+  // rosa dibujada en SVG
+  (function(){
+    const cols=['#3d0f1c','#561527','#6e1c33','#8a2440','#a02d4b','#b8395a'];
+    let g='';
+    g+='<path d="M0 60 C 12 140, -22 220, 10 310" stroke="#2f4a2a" stroke-width="6" fill="none" stroke-linecap="round"/>';
+    g+='<ellipse cx="-26" cy="170" rx="30" ry="12" transform="rotate(-35 -26 170)" fill="#34552e"/>';
+    g+='<ellipse cx="22" cy="235" rx="30" ry="12" transform="rotate(30 22 235)" fill="#2c4a27"/>';
+    for(let l=0;l<6;l++){
+      const count=l<4?7-l:3, dist=60-l*10, rx=36-l*4.5, ry=42-l*5.5;
+      for(let i=0;i<count;i++){
+        const a=(360/count)*i+l*27;
+        g+=`<ellipse cx="0" cy="${-dist}" rx="${rx}" ry="${ry}" transform="rotate(${a})" fill="${cols[l]}" stroke="rgba(20,0,8,.55)" stroke-width="1.2"/>`;
+      }
+    }
+    g+='<path d="M-8 -4 C -2 -14, 10 -8, 4 2 C 0 8, -10 4, -4 -2" stroke="#1d0710" stroke-width="1.5" fill="none"/>';
+    document.getElementById("rose").innerHTML='<svg viewBox="-100 -100 200 420" xmlns="http://www.w3.org/2000/svg">'+g+'</svg>';
+  })();
+
+  function petalas(){ setInterval(()=>{ const p=document.createElement("div"); p.className="petal";
+    p.style.left=Math.random()*100+"%"; p.style.setProperty("--dx",(Math.random()*160-80)+"px"); p.style.setProperty("--rot",(Math.random()*540-270)+"deg");
+    p.style.animationDuration=(9+Math.random()*7)+"s"; p.style.transform="scale("+(.7+Math.random()*.8)+")";
+    document.body.appendChild(p); setTimeout(()=>p.remove(),17000); }, 2600); }
+
+  function revelar(cont, base, paso){
+    paso = paso || 1300;
+    cont.querySelectorAll(".in").forEach(el=>el.classList.remove("in"));
+    cont.querySelectorAll("p, .divider, .quote, .sign, .end, .continue").forEach((el,i)=>{
+      setTimeout(()=>el.classList.add("in"), base+i*paso);
+    });
+  }
+  // ---- progreso guardado en el navegador de quien lee ----
+  const KEY = "carta_tatiana_estado";
+  const LS = {
+    get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+    set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} },
+    del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  };
+  const HASH2 = "1c0c46e4edb9f6";           // contraseña de la última parte: TF
+  const TELEFONO = "573008040947";  // número de Felipe con código de país, sin + ni espacios
+
+  // ---- música de la propuesta (archivo cancion.mp3 junto a index.html) ----
+  let fadeId;
+  function fade(a, hasta, ms, fin){
+    clearInterval(fadeId);
+    const paso=(hasta-a.volume)/(ms/100);
+    fadeId=setInterval(()=>{
+      const v=a.volume+paso;
+      if ((paso>0 && v>=hasta) || (paso<=0 && v<=hasta)) { a.volume=Math.max(0,Math.min(1,hasta)); clearInterval(fadeId); if(fin) fin(); }
+      else a.volume=Math.max(0,Math.min(1,v));
+    },100);
+  }
+  function musica(encender){
+    const a=document.getElementById("song"), btn=document.getElementById("mbtn");
+    if (encender){
+      btn.classList.remove("hidden");
+      a.volume=0;
+      const p=a.play();
+      if (p && p.then) p.then(()=>{ btn.classList.remove("off"); fade(a,0.8,3000); }).catch(()=>{ btn.classList.add("off"); });
+    } else {
+      fade(a,0,1200,()=>{ a.pause(); });
+      btn.classList.add("hidden");
+    }
+  }
+  document.getElementById("mbtn").addEventListener("click", ()=>{
+    const a=document.getElementById("song"), btn=document.getElementById("mbtn");
+    if (a.paused){ a.volume=0; a.play().then(()=>{ btn.classList.remove("off"); fade(a,0.8,1500); }).catch(()=>{}); }
+    else { fade(a,0,600,()=>a.pause()); btn.classList.add("off"); }
+  });
+
+  function pasar(deId, aId){
+    const de=document.getElementById(deId), a=document.getElementById(aId);
+    de.classList.add("out");
+    setTimeout(()=>{
+      de.classList.add("hidden");
+      a.classList.remove("hidden","out");
+      LS.set(KEY, "p"+aId.replace("page",""));
+      musica(aId==="page5");
+      window.scrollTo({top:0, behavior:"smooth"});
+      revelar(a, 500);
+    }, 900);
+  }
+  document.getElementById("next").addEventListener("click", ()=>pasar("page1","page2"));
+  document.getElementById("next2").addEventListener("click", ()=>pasar("page2","page3"));
+  document.getElementById("next3").addEventListener("click", ()=>pasar("page3","page4"));
+  document.getElementById("reread").addEventListener("click", ()=>pasar("page4","page1"));
+  document.getElementById("reread2").addEventListener("click", ()=>pasar("page5","page1"));
+
+  const pass2=document.getElementById("pass2"), err2=document.getElementById("err2");
+  function abrirFinal(){
+    if (huella(pass2.value.trim().toLowerCase()) === HASH2){ pass2.value=""; pasar("page4","page5"); }
+    else { err2.classList.add("show"); pass2.value=""; setTimeout(()=>err2.classList.remove("show"),2200); }
+  }
+  document.getElementById("go2").addEventListener("click", abrirFinal);
+  pass2.addEventListener("keydown", e=>{ if(e.key==="Enter") abrirFinal(); });
+
+  function abrirWA(msg){
+    const note=document.getElementById("note");
+    if (TELEFONO.includes("X")) { note.textContent="(Aquí se abrirá WhatsApp con un mensaje para Felipe.)"; return; }
+    note.textContent="Se abrirá WhatsApp con tu mensaje. Solo falta que le des enviar ♡";
+    window.open("https://wa.me/"+TELEFONO+"?text="+encodeURIComponent(msg), "_blank");
+  }
+  document.querySelectorAll(".ans[data-msg]").forEach(b=>b.addEventListener("click", ()=>abrirWA(b.dataset.msg)));
+  document.getElementById("own").addEventListener("click", ()=>{
+    document.getElementById("ownbox").classList.remove("hidden");
+    document.getElementById("owntext").focus();
+  });
+  document.getElementById("ownsend").addEventListener("click", ()=>{
+    const t=document.getElementById("owntext").value.trim();
+    if (!t) { document.getElementById("note").textContent="Escribe primero tu respuesta."; return; }
+    abrirWA("Hola Felipe, ya leí la carta y tu pregunta. " + t);
+  });
+
+  // si ya había avanzado, vuelve donde se quedó
+  function restaurar(){
+    if (location.hash === "#reiniciar") { LS.del(KEY); return; }
+    const st = LS.get(KEY);
+    if (!/^p[1-5]$/.test(st||"")) return;
+    gate.classList.add("hidden");
+    letter.classList.remove("hidden");
+    document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
+    const pg = document.getElementById("page"+st[1]);
+    pg.classList.remove("hidden","out");
+    if (st==="p5") { const mb=document.getElementById("mbtn"); mb.classList.remove("hidden"); mb.classList.add("off"); }
+    requestAnimationFrame(()=>{ letter.classList.add("show"); floaters(); petalas(); revelar(pg, 400, 450); });
+  }
+
+  function intentar(){
+    if (huella(pass.value.trim().toLowerCase()) === HASH){
+      gate.classList.add("fade-out"); LS.set(KEY, "p1");
+      setTimeout(()=>{
+        gate.classList.add("hidden"); letter.classList.remove("hidden");
+        requestAnimationFrame(()=>{
+          letter.classList.add("show"); floaters(); petalas();
+          revelar(document.getElementById("page1"), 900);
+        });
+      },1200);
+    } else {
+      err.classList.add("show");
+      form.classList.remove("shake"); void form.offsetWidth; form.classList.add("shake");
+      pass.value=""; setTimeout(()=>err.classList.remove("show"),2200);
+    }
+  }
+  document.getElementById("go").addEventListener("click", intentar);
+  pass.addEventListener("keydown", e=>{ if(e.key==="Enter") intentar(); });
+  restaurar();
+</script>
+</body>
+</html>
